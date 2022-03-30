@@ -1,6 +1,6 @@
-import { useState, useReducer, useEffect } from 'react';
+import { useState, useReducer, useEffect, useCallback } from 'react';
 import StoriesList from './components/StoriesList/StoriesList';
-import InputWidthLabel from './components/InputWidthLabel/InputWidthLabel';
+import SearchForm from './components/SearchForm/SearchForm';
 
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -52,18 +52,19 @@ const useSemiPersistentState = (key, initialState) => {
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useSemiPersistentState('search', '');
+  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
   const [stories, dispatchStories] = useReducer(
     storiesReducer,
     { data: [], isLoading: false, error: false }
   );
 
-  useEffect(() => {
+  const handleFetchStories = useCallback(() => {
     dispatchStories({
       type: 'STORIES_FETCH_INIT',
       payload: true,
     });
 
-    fetch(`${API_ENDPOINT}${searchTerm}`)
+    fetch(url)
       .then(response => response.json())
       .then((data) => {
         dispatchStories({type: 'STORIES_FETCH_SUCCESS', payload: data.hits});
@@ -71,10 +72,19 @@ const App = () => {
       .catch((err) => {
         dispatchStories({type: 'STORIES_FETCH_FAILURE', payload: err});
       });
-  }, [searchTerm]);
+  }, [url]);
+
+  useEffect(() => {
+    handleFetchStories();
+  }, [handleFetchStories]);
 
   const handleOnSearch = (e) =>
     setSearchTerm(e.target.value);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setUrl(`${API_ENDPOINT}${searchTerm}`);
+  };
 
   const handleRemoveStory = (storyId) => {
     dispatchStories({
@@ -82,10 +92,6 @@ const App = () => {
       payload: storyId
     });
   }
-
-  const searchedStories = stories.data.filter(story =>
-    story.title && story.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div>
@@ -97,12 +103,11 @@ const App = () => {
           && <p>Searching for <strong>{searchTerm}</strong>.</p>
         }
 
-        <InputWidthLabel
-          id="search"
-          isFocused
-          onInputChange={handleOnSearch}
-          value={searchTerm}
-        >Search:</InputWidthLabel>
+        <SearchForm
+          onSearchInput={handleOnSearch}
+          onSearchSubmit={handleSearchSubmit}
+          searchTerm={searchTerm}
+        />
       </header>
 
       <hr />
@@ -110,7 +115,7 @@ const App = () => {
       { stories.isLoading
         ? <span>...Loading</span>
         : <StoriesList
-          stories={searchedStories}
+          stories={stories.data}
           onRemoveItem={handleRemoveStory}
         />
       }
