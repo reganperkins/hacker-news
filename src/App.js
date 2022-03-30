@@ -113,7 +113,7 @@ const App = () => {
     });
   }
 
-  const currentStories = stories.data.filter(story =>
+  const searchedStories = stories.data.filter(story =>
     story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -124,22 +124,21 @@ const App = () => {
         {searchTerm
           && <p>Searching for <strong>{searchTerm}</strong>.</p>
         }
-      </header>
 
-      <InputWidthLabel
-        id="search"
-        isFocused
-        onInputChange={handleOnSearch}
-      >
-        Search:
-      </InputWidthLabel>
+        <InputWidthLabel
+          id="search"
+          isFocused
+          onInputChange={handleOnSearch}
+          value={searchTerm}
+        >Search:</InputWidthLabel>
+      </header>
 
       <hr />
 
       { stories.isLoading
         ? <span>...Loading</span>
         : <StoriesList
-          stories={currentStories}
+          stories={searchedStories}
           onRemoveItem={handleRemoveStory}
         />
       }
