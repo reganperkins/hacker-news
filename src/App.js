@@ -2,26 +2,7 @@ import { useState, useReducer, useEffect } from 'react';
 import StoriesList from './components/StoriesList/StoriesList';
 import InputWidthLabel from './components/InputWidthLabel/InputWidthLabel';
 
-const list = [
-  {
-    title: 'React',
-    url: 'https://reactjs.org/',
-    author: 'Jordan Walke',
-    num_comments: 3,
-    points: 4,
-    objectID: 0,
-  },
-  {
-    title: 'Redux',
-    url: 'https://redux.js.org/',
-    author: 'Dan Abramov, Andrew Clark',
-    num_comments: 2,
-    points: 5,
-    objectID: 1,
-  },
-];
-
-
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
 const storiesReducer = (state, action) => {
   switch (action.type) {
@@ -56,12 +37,6 @@ const storiesReducer = (state, action) => {
   }
 };
 
-const getAsyncStories = () =>
-  new Promise(resolve => {
-    setTimeout(() => resolve(list), 1000);
-  });
-
-
 const useSemiPersistentState = (key, initialState) => {
   const [value, setValue] = useState(
     localStorage.getItem(key) || initialState
@@ -88,20 +63,15 @@ const App = () => {
       payload: true,
     });
 
-    getAsyncStories()
-      .then((stories) => {
-        dispatchStories({
-          type: 'STORIES_FETCH_SUCCESS',
-          payload: stories,
-        });
+    fetch(`${API_ENDPOINT}${searchTerm}`)
+      .then(response => response.json())
+      .then((data) => {
+        dispatchStories({type: 'STORIES_FETCH_SUCCESS', payload: data.hits});
       })
       .catch((err) => {
-        dispatchStories({
-          type: 'STORIES_FETCH_FAILURE',
-          payload: err,
-        });
+        dispatchStories({type: 'STORIES_FETCH_FAILURE', payload: err});
       });
-  }, []);
+  }, [searchTerm]);
 
   const handleOnSearch = (e) =>
     setSearchTerm(e.target.value);
@@ -114,11 +84,13 @@ const App = () => {
   }
 
   const searchedStories = stories.data.filter(story =>
-    story.title.toLowerCase().includes(searchTerm.toLowerCase())
+    story.title && story.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div>
+      { stories.error
+        && <span>{stories.error?.message}</span> }
       <header>
         <h1>Hacker news stories</h1>
         {searchTerm
