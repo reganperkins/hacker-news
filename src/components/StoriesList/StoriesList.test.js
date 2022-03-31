@@ -24,9 +24,10 @@ describe('StoriesList', () => {
     },
   ];
 
-  it('renders two items', () => {
+  it('renders two items', async () => {
     const component = renderer.create(<StoriesList stories={list} />);
+    const listItem = await component.root.findAllByType(ListItem);
 
-    expect(component.root.findAllByType(ListItem).length).toEqual(2);
+    expect(listItem.length).toEqual(2);
   });
 });
