@@ -1,7 +1,11 @@
 import InputWidthLabel from '../InputWidthLabel/InputWidthLabel';
 
-const SearchForm = ({onSearchInput, searchTerm, onSearchSubmit}) => {
-  return(
+const SearchForm = ({
+  onSearchInput,
+  searchTerm,
+  onSearchSubmit,
+}) => {
+  return (
     <form onSubmit={onSearchSubmit}>
       <InputWidthLabel
         id="search"
@@ -11,10 +15,7 @@ const SearchForm = ({onSearchInput, searchTerm, onSearchSubmit}) => {
       >
         Search:
       </InputWidthLabel>
-      <button
-        type="submit"
-        disabled={!searchTerm}
-      >
+      <button type="submit" disabled={!searchTerm}>
         Submit
       </button>
     </form>

@@ -29,7 +29,7 @@ const storiesReducer = (state, action) => {
       return {
         ...state,
         data: state.data.filter(
-          story => action.payload.objectID !== story.objectID
+          (story) => action.payload.objectID !== story.objectID
         ),
       };
     default:
@@ -49,14 +49,17 @@ const useSemiPersistentState = (key, initialState) => {
   return [value, setValue];
 };
 
-
 const App = () => {
-  const [searchTerm, setSearchTerm] = useSemiPersistentState('search', '');
-  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
-  const [stories, dispatchStories] = useReducer(
-    storiesReducer,
-    { data: [], isLoading: false, error: false }
+  const [searchTerm, setSearchTerm] = useSemiPersistentState(
+    'search',
+    ''
   );
+  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
+  const [stories, dispatchStories] = useReducer(storiesReducer, {
+    data: [],
+    isLoading: false,
+    error: false,
+  });
 
   const handleFetchStories = useCallback(() => {
     dispatchStories({
@@ -65,12 +68,18 @@ const App = () => {
     });
 
     fetch(url)
-      .then(response => response.json())
+      .then((response) => response.json())
       .then((data) => {
-        dispatchStories({type: 'STORIES_FETCH_SUCCESS', payload: data.hits});
+        dispatchStories({
+          type: 'STORIES_FETCH_SUCCESS',
+          payload: data.hits,
+        });
       })
       .catch((err) => {
-        dispatchStories({type: 'STORIES_FETCH_FAILURE', payload: err});
+        dispatchStories({
+          type: 'STORIES_FETCH_FAILURE',
+          payload: err,
+        });
       });
   }, [url]);
 
@@ -78,8 +87,7 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
-  const handleOnSearch = (e) =>
-    setSearchTerm(e.target.value);
+  const handleOnSearch = (e) => setSearchTerm(e.target.value);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -89,19 +97,20 @@ const App = () => {
   const handleRemoveStory = (storyId) => {
     dispatchStories({
       type: 'REMOVE_STORY',
-      payload: storyId
+      payload: storyId,
     });
-  }
+  };
 
   return (
     <div>
-      { stories.error
-        && <span>{stories.error?.message}</span> }
+      {stories.error && <span>{stories.error?.message}</span>}
       <header>
         <h1>Hacker news stories</h1>
-        {searchTerm
-          && <p>Searching for <strong>{searchTerm}</strong>.</p>
-        }
+        {searchTerm && (
+          <p>
+            Searching for <strong>{searchTerm}</strong>.
+          </p>
+        )}
 
         <SearchForm
           onSearchInput={handleOnSearch}
@@ -112,16 +121,16 @@ const App = () => {
 
       <hr />
 
-      { stories.isLoading
-        ? <span>...Loading</span>
-        : <StoriesList
+      {stories.isLoading ? (
+        <span>...Loading</span>
+      ) : (
+        <StoriesList
           stories={stories.data}
           onRemoveItem={handleRemoveStory}
         />
-      }
-
+      )}
     </div>
   );
-}
+};
 
 export default App;
