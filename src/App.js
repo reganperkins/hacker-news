@@ -29,7 +29,7 @@ const storiesReducer = (state, action) => {
       return {
         ...state,
         data: state.data.filter(
-          (story) => action.payload.objectID !== story.objectID
+          (story) => action.payload !== story.objectID
         ),
       };
     default:
