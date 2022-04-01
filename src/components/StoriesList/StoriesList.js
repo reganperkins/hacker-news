@@ -34,6 +34,7 @@ const StoriesList = ({ stories, onRemoveItem }) => {
         options={options}
         selected={selectedFilter}
         onOptionClick={handleFilterClick}
+        labelby="filter"
       />
       <ul>
         {getSortedList().map((story) => {
