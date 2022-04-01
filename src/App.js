@@ -121,9 +121,9 @@ const App = () => {
 
       <hr />
 
-      {stories.isLoading ? (
-        <span>...Loading</span>
-      ) : (
+      {stories.isLoading && <span>...Loading</span>}
+
+      {!!stories.data?.length && (
         <StoriesList
           stories={stories.data}
           onRemoveItem={handleRemoveStory}
