@@ -4,6 +4,7 @@ import Dropdown from '../Dropdown/Dropdown';
 import sortBy from 'lodash/sortBy';
 
 const filterActions = {
+  default: (list) => list,
   title: (list) => sortBy(list, 'title'),
   author: (list) => sortBy(list, 'author'),
   comments: (list) => sortBy(list, 'comments'),
@@ -12,7 +13,7 @@ const filterActions = {
 };
 
 const StoriesList = ({ stories, onRemoveItem }) => {
-  const [selectedFilter, setSelectedFilter] = useState('title');
+  const [selectedFilter, setSelectedFilter] = useState('default');
 
   const handleFilterClick = (e) => {
     const { value } = e.target;
