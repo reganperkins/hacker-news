@@ -1,8 +1,17 @@
-import { useState, useReducer, useEffect, useCallback } from 'react';
+import {
+  useState,
+  useReducer,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import StoriesList from './components/StoriesList/StoriesList';
 import SearchForm from './components/SearchForm/SearchForm';
+import { debounce } from 'lodash';
 
-const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
+const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search';
+const getUrl = (searchTerm, page) =>
+  `${`${API_ENDPOINT}?query=${searchTerm}&page=${page}`}`;
 
 const storiesReducer = (state, action) => {
   switch (action.type) {
@@ -17,7 +26,8 @@ const storiesReducer = (state, action) => {
         ...state,
         isLoading: false,
         error: false,
-        data: action.payload,
+        page: action.payload.page,
+        data: [...state.data, ...action.payload.data],
       };
     case 'STORIES_FETCH_FAILURE':
       return {
@@ -54,12 +64,15 @@ const App = () => {
     'search',
     ''
   );
-  const [url, setUrl] = useState(`${API_ENDPOINT}${searchTerm}`);
+
   const [stories, dispatchStories] = useReducer(storiesReducer, {
     data: [],
+    page: 0,
     isLoading: false,
     error: false,
   });
+
+  const [url, setUrl] = useState(getUrl(searchTerm, 0));
 
   const handleFetchStories = useCallback(() => {
     dispatchStories({
@@ -72,7 +85,10 @@ const App = () => {
       .then((data) => {
         dispatchStories({
           type: 'STORIES_FETCH_SUCCESS',
-          payload: data.hits,
+          payload: {
+            data: data.hits,
+            page: data.page + 1,
+          },
         });
       })
       .catch((err) => {
@@ -87,11 +103,28 @@ const App = () => {
     handleFetchStories();
   }, [handleFetchStories]);
 
+  const loadMoreRef = useRef();
+
+  useEffect(() => {
+    const handleOnScroll = debounce(() => {
+      if (stories.isLoading) return;
+      const { top, height } =
+        loadMoreRef.current.getBoundingClientRect();
+
+      if (top - height > 0 && top + height <= window.innerHeight) {
+        setUrl(getUrl(searchTerm, stories.page));
+      }
+    }, 150);
+    window.addEventListener('scroll', handleOnScroll);
+
+    return () => window.removeEventListener('scroll', handleOnScroll);
+  }, [searchTerm, stories]);
+
   const handleOnSearch = (e) => setSearchTerm(e.target.value);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    setUrl(`${API_ENDPOINT}${searchTerm}`);
+    setUrl(getUrl(searchTerm, 0));
   };
 
   const handleRemoveStory = (storyId) => {
@@ -129,6 +162,7 @@ const App = () => {
           onRemoveItem={handleRemoveStory}
         />
       )}
+      <div ref={loadMoreRef}>Load more..</div>
     </div>
   );
 };
